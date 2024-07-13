@@ -1,0 +1,6 @@
+server:
+  host: something else
+  port: 3000
+logger:
+  level: debug
+  json: false
