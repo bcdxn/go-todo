@@ -1,24 +1,16 @@
 package restapi
 
 import (
-	"fmt"
-	"net/http"
-
+	"github.com/bcdxn/go-todo/pkg/restapi/handlers"
 	"github.com/hashicorp/go-hclog"
+	"github.com/julienschmidt/httprouter"
 )
 
-func handlerSomething(logger hclog.Logger) http.Handler {
-	return http.HandlerFunc(
-		func(writer http.ResponseWriter, request *http.Request) {
-			logger.Debug("neato")
-			fmt.Fprintf(writer, "Hello World, %s", request.URL.Path[1:])
-		},
-	)
-}
-
 func addRoutes(
-	mux *http.ServeMux,
+	mux *httprouter.Router,
 	logger hclog.Logger,
 ) {
-	mux.Handle("/", handlerSomething(logger))
+	// mux.Handle("/api/todos", handlers.HandlerToDosCreate(logger))
+	// mux.Handle("/api/todos", handlers.HandlerToDosUpdate(logger))
+	mux.GET("/api/todos", handlers.HandlerToDosGet(logger))
 }
