@@ -20,15 +20,12 @@ func run(
 	ctx context.Context,
 	args []string,
 	cfg restapi.Config,
-	stdin io.Reader,
-	stdout, stderr io.Writer,
+	stdout io.Writer,
 ) error {
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
-	defer cancel()
-
 	l := hclog.New(&hclog.LoggerOptions{
-		Name:  "gotodo",
-		Level: hclog.LevelFromString(cfg.Logger.Level),
+		Name:   "gotodo",
+		Level:  hclog.LevelFromString(cfg.Logger.Level),
+		Output: stdout,
 	})
 
 	srv := restapi.NewServer(l, cfg)
@@ -45,13 +42,19 @@ func run(
 		}
 	}()
 
+	waitForInterrupt(ctx, httpServer)
+
+	return nil
+}
+
+func waitForInterrupt(ctx context.Context, httpServer *http.Server) {
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		// make a new context for the Shutdown (thanks Alessandro Rosetti)
-		shutdownCtx := context.Background()
 		shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
@@ -59,8 +62,6 @@ func run(
 		}
 	}()
 	wg.Wait()
-
-	return nil
 }
 
 func main() {
@@ -72,10 +73,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(ctx, os.Args, cfg, os.Stdin, os.Stdout, os.Stderr); err != nil {
+	if err := run(ctx, os.Args, cfg, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("exiting successfully", cfg.Server.Port)
+	fmt.Println("exited successfully")
 }
