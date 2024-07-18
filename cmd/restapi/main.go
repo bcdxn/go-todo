@@ -5,48 +5,71 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"time"
 
-	"github.com/bcdxn/go-todo/pkg/restapi"
+	"github.com/bcdxn/go-todo/pkg/config"
+	"github.com/bcdxn/go-todo/pkg/rest"
+	"github.com/bcdxn/go-todo/pkg/services"
 	"github.com/hashicorp/go-hclog"
 )
 
+// main is the entry point into our program that serves a REST API with  To-Do management
+// capabilities.
+func main() {
+	ctx := context.Background()
+	cfg, err := config.NewConfig(config.OptionsNewConfig{})
+	if err != nil {
+		log.Fatalf("%s\n", err)
+		os.Exit(1)
+	}
+
+	if err := run(ctx, os.Stdout, os.Stderr, cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("exited successfully")
+}
+
+// run initializes dependences and starts the server. It is meant to be called by the application's
+// entrypoint, `main`.
 func run(
 	ctx context.Context,
-	args []string,
-	cfg restapi.Config,
-	stdout io.Writer,
+	stdout, stderr io.Writer,
+	cfg config.Config,
 ) error {
 	l := hclog.New(&hclog.LoggerOptions{
 		Name:   "gotodo",
-		Level:  hclog.LevelFromString(cfg.Logger.Level),
+		Level:  hclog.LevelFromString("trace"),
 		Output: stdout,
 	})
 
-	srv := restapi.NewServer(l, cfg)
-
-	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(cfg.Server.Host, cfg.Server.Port),
-		Handler: srv,
+	s := services.Services{
+		ToDo: services.NewStaticToDoService(),
 	}
 
+	restServer := rest.NewServer(cfg, l, s)
+
 	go func() {
-		log.Printf("listening on %s\n", httpServer.Addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "error listening and serving: %s\n", err)
+		log.Printf("listening on %s\n", restServer.Addr)
+		if err := restServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Fprintf(stderr, "error listening and serving: %s\n", err)
 		}
 	}()
 
-	waitForInterrupt(ctx, httpServer)
+	waitForInterrupt(ctx, restServer)
 
 	return nil
 }
 
+// waitForInterrupt will keep the main Go process running until an OS interrupt signal (e.g. ctrl+c)
+// is received. It will then gracefully shutdown the HTTP server at the core of the REST API by
+// allowing connections to be drained. A timeout will eventually kill the server if connections are
+// not drained fast enough.
 func waitForInterrupt(ctx context.Context, httpServer *http.Server) {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
@@ -62,21 +85,4 @@ func waitForInterrupt(ctx context.Context, httpServer *http.Server) {
 		}
 	}()
 	wg.Wait()
-}
-
-func main() {
-	ctx := context.Background()
-	cfg, err := restapi.NewConfig(restapi.OptionsNewConfig{})
-
-	if err != nil {
-		log.Fatalf("%s\n", err)
-		os.Exit(1)
-	}
-
-	if err := run(ctx, os.Args, cfg, os.Stdout); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("exited successfully")
 }

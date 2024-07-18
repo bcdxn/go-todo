@@ -1,4 +1,4 @@
-package restapi
+package config
 
 import (
 	"os"
@@ -13,7 +13,7 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string `yaml:"host envconfig:"SERVER_HOST"`
+	Host string `yaml:"host" envconfig:"SERVER_HOST"`
 	Port string `yaml:"port" envconfig:"SERVER_PORT"`
 }
 

@@ -1,5 +1,5 @@
 server:
-  host: something else
+  host: localhost
   port: 3000
 logger:
   level: debug
