@@ -18,7 +18,8 @@ type ServerConfig struct {
 }
 
 type LoggerConfig struct {
-	Level string `yaml:"level" envconfig:"LOG_LEVEL"`
+	Level  string `yaml:"level" envconfig:"LOG_LEVEL"`
+	Format string `yaml:"format" envconfig:"LOG_FORMAT"`
 }
 
 // Options to
@@ -57,12 +58,17 @@ func getDefault() Config {
 			Port: "3000",
 		},
 		Logger: LoggerConfig{
-			Level: "debug",
+			Level:  "debug",
+			Format: "logfmt",
 		},
 	}
 }
 
 func setFromConfigFile(path string, cfg *Config) error {
+	if path == "" {
+		return nil
+	}
+
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err

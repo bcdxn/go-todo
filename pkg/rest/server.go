@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/bcdxn/go-todo/pkg/config"
-	"github.com/bcdxn/go-todo/pkg/services"
+	"github.com/bcdxn/go-todo/pkg/rest/middlewares"
+	"github.com/bcdxn/go-todo/pkg/todo"
 	"github.com/hashicorp/go-hclog"
 	"github.com/julienschmidt/httprouter"
 )
@@ -13,7 +14,7 @@ import (
 func NewServer(
 	cfg config.Config,
 	logger hclog.Logger,
-	services services.Services,
+	todoService todo.Service,
 ) *http.Server {
 	// Create a new router that can handle routing parameters
 	router := httprouter.New()
@@ -21,12 +22,16 @@ func NewServer(
 	addRoutes(
 		router,
 		logger,
-		services,
+		todoService,
+	)
+	// Apply root-level middlewares
+	handler := middlewares.NewRootRequestIdMiddleware(
+		middlewares.NewRootLoggingMiddleware(logger, router),
 	)
 	// Initialize and return the HTTP Server
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(cfg.Server.Host, cfg.Server.Port),
-		Handler: router,
+		Handler: handler,
 	}
 	return httpServer
 }

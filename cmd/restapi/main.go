@@ -13,7 +13,7 @@ import (
 
 	"github.com/bcdxn/go-todo/pkg/config"
 	"github.com/bcdxn/go-todo/pkg/rest"
-	"github.com/bcdxn/go-todo/pkg/services"
+	"github.com/bcdxn/go-todo/pkg/todo"
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -21,7 +21,9 @@ import (
 // capabilities.
 func main() {
 	ctx := context.Background()
-	cfg, err := config.NewConfig(config.OptionsNewConfig{})
+	cfg, err := config.NewConfig(config.OptionsNewConfig{
+		FilePath: os.Args[1],
+	})
 	if err != nil {
 		log.Fatalf("%s\n", err)
 		os.Exit(1)
@@ -43,16 +45,17 @@ func run(
 	cfg config.Config,
 ) error {
 	l := hclog.New(&hclog.LoggerOptions{
-		Name:   "gotodo",
-		Level:  hclog.LevelFromString("trace"),
-		Output: stdout,
+		Name:       "gotodo",
+		Level:      hclog.LevelFromString(cfg.Logger.Level),
+		Output:     stdout,
+		JSONFormat: cfg.Logger.Format == "json",
 	})
 
-	s := services.Services{
-		ToDo: services.NewStaticToDoService(),
-	}
-
-	restServer := rest.NewServer(cfg, l, s)
+	restServer := rest.NewServer(
+		cfg,
+		l,
+		todo.NewStaticService(l),
+	)
 
 	go func() {
 		log.Printf("listening on %s\n", restServer.Addr)
