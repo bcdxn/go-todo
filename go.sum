@@ -1,0 +1,6 @@
+github.com/PumpkinSeed/slog-context v0.1.2 h1:K2u47Kqd8nmNNZeo0N3cN6yi28kF8Xv78EGQN232TLk=
+github.com/PumpkinSeed/slog-context v0.1.2/go.mod h1:t2SKju/PIn6GC7fouz2zxtRAX8DaLLBjasUmpRnlRK0=
+github.com/segmentio/ksuid v1.0.4 h1:sBo2BdShXjmcugAMwjugoGUdUV0pcxY5mW4xKRn3v4c=
+github.com/segmentio/ksuid v1.0.4/go.mod h1:/XUiZBD3kVx5SmUOl55voK5yeAbBNNIed+2O73XgrPE=
+github.com/urfave/negroni v1.0.0 h1:kIimOitoypq34K7TG7DUaJ9kq/N4Ofuwi1sjz0KipXc=
+github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=

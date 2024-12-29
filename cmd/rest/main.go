@@ -11,18 +11,25 @@ import (
 	"time"
 
 	"github.com/bcdxn/go-todo/internal/rest"
+	"github.com/bcdxn/go-todo/internal/rest/middleware"
 )
 
 func main() {
 	ctx := context.Background()
-	logger := slog.Default()
+	enc := slog.NewJSONHandler(os.Stdout, nil)
+	h := middleware.SLogContextHandler{
+		Handler: enc,
+		Keys:    []any{middleware.RequestIDCtxKey},
+	}
 
-	srv := rest.NewServer(
+	logger := slog.New(h)
+
+	app := rest.NewApp(
 		logger,
 	)
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", "3000"),
-		Handler: srv,
+		Handler: app,
 	}
 	go func() {
 		logger.Info("server listening", "address", httpServer.Addr)
