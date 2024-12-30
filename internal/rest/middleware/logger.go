@@ -1,3 +1,7 @@
+// Logging middleware to log the incoming request and response status. It also contains the slog
+// handler that enables logging context values (required by the logging middleware to log the
+// request ID).
+
 package middleware
 
 import (
@@ -11,7 +15,7 @@ import (
 
 type SLogContextHandler struct {
 	slog.Handler
-	Keys []any
+	KeysToLog []any
 }
 
 func (h SLogContextHandler) Handle(ctx context.Context, r slog.Record) error {
@@ -20,7 +24,7 @@ func (h SLogContextHandler) Handle(ctx context.Context, r slog.Record) error {
 }
 
 func (h SLogContextHandler) observe(ctx context.Context) (as []slog.Attr) {
-	for _, k := range h.Keys {
+	for _, k := range h.KeysToLog {
 		a, ok := ctx.Value(k).(slog.Attr)
 		if !ok {
 			continue
@@ -31,6 +35,8 @@ func (h SLogContextHandler) observe(ctx context.Context) (as []slog.Attr) {
 	return
 }
 
+// RequestLogger acts as middleware that logs incoming requests and tracks the duration (in ms) the
+// duration request/response handling along with the response status code.
 func RequestLogger(l *slog.Logger) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

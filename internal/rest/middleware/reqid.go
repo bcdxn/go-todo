@@ -8,17 +8,15 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-// custom key type will prevent collisions
-type contextKey string
+// custom key type to prevent collisions
+type reqIDCtxKey string
 
-const (
-	RequestIDCtxKey contextKey = "req_id"
-)
+const RequestIDCtxKey reqIDCtxKey = "req_id"
 
 func RequestID(h http.Handler, l *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), RequestIDCtxKey, slog.Attr{
-			Key:   "req_id",
+			Key:   string(RequestIDCtxKey),
 			Value: slog.StringValue("req_" + ksuid.New().String()),
 		})
 		h.ServeHTTP(w, r.WithContext(ctx))

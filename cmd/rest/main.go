@@ -18,8 +18,8 @@ func main() {
 	ctx := context.Background()
 	enc := slog.NewJSONHandler(os.Stdout, nil)
 	h := middleware.SLogContextHandler{
-		Handler: enc,
-		Keys:    []any{middleware.RequestIDCtxKey},
+		Handler:   enc,
+		KeysToLog: []any{middleware.RequestIDCtxKey},
 	}
 
 	logger := slog.New(h)
