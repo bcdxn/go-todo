@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bcdxn/go-todo/internal/rest"
-	"github.com/bcdxn/go-todo/internal/rest/middleware"
+	"github.com/bcdxn/go-todo/internal/app/rest"
+	"github.com/bcdxn/go-todo/internal/app/rest/middleware"
+	"github.com/bcdxn/go-todo/internal/todo"
 )
 
 func main() {
@@ -24,8 +25,11 @@ func main() {
 
 	logger := slog.New(h)
 
-	app := rest.NewApp(
+	todoRepository := todo.ModelInMemory{}
+
+	app := rest.NewServer(
 		logger,
+		todoRepository,
 	)
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", "3000"),
