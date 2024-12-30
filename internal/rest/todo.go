@@ -5,7 +5,7 @@ import "github.com/bcdxn/go-todo/internal/domain"
 type toDo struct {
 	ID     string `json:"id"`
 	Task   string `json:"task"`
-	IsDone bool   `json:"isDone`
+	IsDone bool   `json:"isDone"`
 }
 
 func domainToDoFromRest(in toDo) domain.ToDo {

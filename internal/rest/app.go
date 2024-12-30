@@ -15,7 +15,7 @@ func NewApp(
 	addRoutes(mux, logger, model.ToDoInMemory{})
 	// Add global middlewares
 	var handler http.Handler = mux
-	// Note - middleware is executed in reverse order that it is applied
+	// Note - middleware is executed in reverse order that it declared
 	handler = middleware.RequestLogger(logger)(handler)
 	handler = middleware.RequestID(handler, logger)
 	return handler
